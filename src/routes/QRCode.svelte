@@ -41,41 +41,6 @@
 		col: number;
 	}
 
-	const qrCodeSize = 150;
-
-	export let data: IProps;
-
-	let inputUrl = '';
-
-	const defaultProps = {
-		value: 'https://kit.svelte.dev/',
-		ecLevel: 'M',
-		enableCORS: false,
-		size: qrCodeSize,
-		quietZone: 10,
-		bgColor: '#FFFFFF',
-		fgColor: '#000000',
-		logoOpacity: 1,
-		qrStyle: 'squares',
-		eyeRadius: [0, 0, 0],
-		logoPaddingStyle: 'square'
-	} as const;
-
-	let dataDefaulted = {
-		...data,
-		value: data.value ?? defaultProps.value,
-		ecLevel: data.ecLevel ?? defaultProps.ecLevel,
-		enableCORS: data.enableCORS ?? defaultProps.enableCORS,
-		size: data.size ?? defaultProps.size,
-		quietZone: data.quietZone ?? defaultProps.quietZone,
-		bgColor: data.bgColor ?? defaultProps.bgColor,
-		fgColor: data.fgColor ?? defaultProps.fgColor,
-		logoOpacity: data.logoOpacity ?? defaultProps.logoOpacity,
-		qrStyle: data.qrStyle ?? defaultProps.qrStyle,
-		eyeRadius: data.eyeRadius ?? defaultProps.eyeRadius,
-		logoPaddingStyle: data.logoPaddingStyle ?? defaultProps.logoPaddingStyle
-	};
-
 	function utf16to8(str: string): string {
 		let out: string = '',
 			i: number,
@@ -107,8 +72,7 @@
 		size: number,
 		color: string,
 		radii: number | number[],
-		fill: boolean,
-		ctx: CanvasRenderingContext2D
+		fill: boolean
 	) {
 		ctx.lineWidth = lineWidth;
 		ctx.fillStyle = color;
@@ -162,7 +126,6 @@
 	 * Draw a single positional pattern eye.
 	 */
 	function drawPositioningPattern(
-		ctx: CanvasRenderingContext2D,
 		cellSize: number,
 		offset: number,
 		row: number,
@@ -197,13 +160,13 @@
 		let size = cellSize * 7;
 
 		// Outer box
-		drawRoundedSquare(lineWidth, x, y, size, colorOuter, radiiOuter, false, ctx);
+		drawRoundedSquare(lineWidth, x, y, size, colorOuter, radiiOuter, false);
 
 		// Inner box
 		size = cellSize * 3;
 		y += cellSize * 2;
 		x += cellSize * 2;
-		drawRoundedSquare(lineWidth, x, y, size, colorInner, radiiInner, true, ctx);
+		drawRoundedSquare(lineWidth, x, y, size, colorInner, radiiInner, true);
 	}
 	/**
 	 * Is this dot inside a positional pattern zone.
@@ -246,56 +209,82 @@
 		}
 	}
 
+	// Constants
+	const qrCodeSize = 150;
+
+	const defaultProps = {
+		value: 'https://kit.svelte.dev/',
+		ecLevel: 'M',
+		enableCORS: false,
+		size: qrCodeSize,
+		quietZone: 10,
+		bgColor: '#FFFFFF',
+		fgColor: '#000000',
+		logoOpacity: 1,
+		qrStyle: 'squares',
+		eyeRadius: [0, 0, 0],
+		logoPaddingStyle: 'square'
+	} as const;
+
+	// Params
+	export let data: IProps;
+
+	// Stateful
+	let inputUrl = '';
+
+	let dataDefaulted = {
+		...data,
+		value: data.value ?? defaultProps.value,
+		ecLevel: data.ecLevel ?? defaultProps.ecLevel,
+		enableCORS: data.enableCORS ?? defaultProps.enableCORS,
+		size: data.size ?? defaultProps.size,
+		quietZone: data.quietZone ?? defaultProps.quietZone,
+		bgColor: data.bgColor ?? defaultProps.bgColor,
+		fgColor: data.fgColor ?? defaultProps.fgColor,
+		logoOpacity: data.logoOpacity ?? defaultProps.logoOpacity,
+		qrStyle: data.qrStyle ?? defaultProps.qrStyle,
+		eyeRadius: data.eyeRadius ?? defaultProps.eyeRadius,
+		logoPaddingStyle: data.logoPaddingStyle ?? defaultProps.logoPaddingStyle
+	}; // satisfies IProps;
+
+	// TODO: NO as?
+	let canvas: HTMLCanvasElement;
+	let ctx: CanvasRenderingContext2D;
+
 	// RENDERABLE ACTIONS
 	onMount(() => {
+		// TODO: NO as?
+		canvas = document.getElementById('qrcode-logo') as HTMLCanvasElement;
+		ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 		update();
 	});
 
-	function shouldComponentUpdate(nextProps: IProps) {
-		// DeepEqual?
-		// return !isEqual(this.props, nextProps);
-		return false;
-	}
-
-	// function componentDidMount() {
-	// 	update();
-	// }
-
-	// function componentDidUpdate() {
-	// 	update();
-	// }
-
 	function update() {
 		const {
-			value,
+			bgColor,
 			ecLevel,
 			enableCORS,
-			bgColor,
-			fgColor,
-			logoImage,
-			logoOpacity,
-			logoOnLoad,
-			removeQrCodeBehindLogo,
-			qrStyle,
-			eyeRadius,
 			eyeColor,
-			logoPaddingStyle
+			eyeRadius,
+			fgColor,
+			logoHeight = 0,
+			logoImage,
+			logoOnLoad,
+			logoOpacity,
+			logoPadding = 0,
+			logoPaddingStyle,
+			logoWidth = 0,
+			qrStyle,
+			quietZone,
+			removeQrCodeBehindLogo,
+			// TODO: auto adjust size maybe based on size of string?
+			size,
+			value
 		} = dataDefaulted;
-
-    // TODO: auto adjust size maybe based on size of string?
-		const size = dataDefaulted.size;
-		const quietZone = dataDefaulted.quietZone;
-		const logoWidth = dataDefaulted.logoWidth ? dataDefaulted.logoWidth : 0;
-		const logoHeight = dataDefaulted.logoHeight ? dataDefaulted.logoHeight : 0;
-		const logoPadding = dataDefaulted.logoPadding ? dataDefaulted.logoPadding : 0;
 
 		const qrCode = QrCodeGenerator(0, ecLevel);
 		qrCode.addData(utf16to8(inputUrl.length > 0 ? inputUrl : value));
 		qrCode.make();
-
-		// TODO: NO as?
-		const canvas = document.getElementById('qrcode-logo') as HTMLCanvasElement;
-		const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 
 		const canvasSize = size + 2 * quietZone;
 		const length = qrCode.getModuleCount();
@@ -359,7 +348,8 @@
 			const { row, col } = positioningZones[i];
 
 			let radii = eyeRadius;
-			let color;
+			// if not specified, eye color is the same as foreground,
+			let color: EyeColor = fgColor;
 
 			if (Array.isArray(radii)) {
 				radii = radii[i];
@@ -368,10 +358,7 @@
 				radii = [radii, radii, radii, radii];
 			}
 
-			if (!eyeColor) {
-				// if not specified, eye color is the same as foreground,
-				color = fgColor;
-			} else {
+			if (typeof eyeColor !== 'undefined') {
 				if (Array.isArray(eyeColor)) {
 					// if array, we pass the single color
 					color = eyeColor[i];
@@ -380,7 +367,8 @@
 				}
 			}
 
-			drawPositioningPattern(ctx, cellSize, offset, row, col, color, radii as CornerRadii);
+			// TODO: No as...
+			drawPositioningPattern(cellSize, offset, row, col, color, radii as CornerRadii);
 		}
 
 		if (logoImage) {
@@ -388,6 +376,7 @@
 			if (enableCORS) {
 				image.crossOrigin = 'Anonymous';
 			}
+
 			image.onload = () => {
 				ctx.save();
 
@@ -428,28 +417,22 @@
 
 				ctx.globalAlpha = logoOpacity;
 				ctx.drawImage(image, dxLogo + offset, dyLogo + offset, dWidthLogo, dHeightLogo);
-				ctx.restore();
+				// TODO: Why was it "restore" not "save"?
+				// ctx.restore();
+				ctx.save();
 				if (logoOnLoad) {
 					logoOnLoad();
 				}
 			};
+
+			image.onerror = (err) => {
+				console.error(err);
+				// TODO: Show error invalid image
+			};
+
 			image.src = logoImage;
 		}
 	}
-
-	function handleChange(val: string) {
-		// $: {
-		// inputUrl = val;
-		update();
-		// }
-	}
 </script>
 
-<input
-	bind:value={inputUrl}
-	on:change={(evnt) => handleChange(evnt.currentTarget.value)}
-	type="text"
-/>
-
 <canvas id="qrcode-logo" height={qrCodeSize} width={qrCodeSize} />
-

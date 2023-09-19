@@ -5,7 +5,7 @@
 	import QrCode from './QRCode.svelte';
 
 	let url = '';
-  let foo;
+	let foo;
 
 	console.log('foo: ', foo);
 
@@ -23,6 +23,8 @@
 	// 		url = newUrl;
 	// 	}
 	// );
+
+	let inputValue = '';
 </script>
 
 <h1>Welcome to SvelteKit</h1>
@@ -30,9 +32,20 @@
 
 {@html url}
 
+<!-- on:change={(evnt) => handleChange(evnt.currentTarget.value)} -->
+<input bind:value={inputValue} type="text" />
+
 <!-- <QRCode value="testing12354" /> -->
-<QrCode data={{
-  value: 'https://github.com/gcoro/react-qrcode-logo',
-  size: 500,
-  logoImage: 'https://github.com/gcoro/react-qrcode-logo/blob/master/res/qrcode-ts.png'
-}} />
+{#key inputValue}
+	<QrCode
+		data={{
+			value: inputValue, // 'Hello World',
+			size: 500,
+			logoImage: 'https://raw.githubusercontent.com/gcoro/react-qrcode-logo/master/res/qrcode-ts.png',
+			removeQrCodeBehindLogo: true,
+			logoPadding: 10,
+			// logoImage: 'https://raw.githubusercontent.com/gcoro/react-qrcode-logo/master/res/',
+			fgColor: '#5C1D05'
+		}}
+	/>
+{/key}
