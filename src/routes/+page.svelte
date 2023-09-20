@@ -1,51 +1,94 @@
 <script lang="ts">
 	// import QRCode from 'qrcode';
 	// import {QRCode} from 'react-qrcode-logo/dist';
+	import { QrCode, type QrCodeProps } from '$lib';
+	import QrComponent from './QRCode.svelte';
 
-	import QrCode from './QRCode.svelte';
+	let qrCode: QrCode;
 
-	let url = '';
-	let foo;
+	// I'm unable to do server side work, so I will use
+	// the submit as if it were a POST to the server.
+	async function handleSubmit(target: EventTarget & HTMLFormElement) {
+		const formData = new FormData(target);
+		console.log('target', target);
+		// const formData = await request.formData();
+		const value = formData.get('value');
+		if (typeof value !== 'string') return;
+		let maybeEcLevel = formData.get('ecLevel');
+		let ecLevel: QrCodeProps['ecLevel'];
+		if (maybeEcLevel instanceof File) {
+			ecLevel = undefined;
+		} else if (typeof maybeEcLevel === 'string') {
+			// TODO: Verify data...
+			//@ts-ignore
+			ecLevel = maybeEcLevel;
+		}
+		const maybeSize = formData.get('size');
+		let size: QrCodeProps['size'] = undefined;
+		if (typeof maybeSize === 'string' && !isNaN(parseInt(maybeSize))) {
+			size = parseInt(maybeSize);
+		}
+		const maybeBgColor = formData.get('bgcolor');
+		let bgColor: QrCodeProps['bgColor'] = undefined;
+		if (typeof maybeBgColor === 'string') {
+			bgColor = maybeBgColor;
+		}
+		const maybeFgColor = formData.get('fgColor');
+		let fgColor: QrCodeProps['fgColor'] = undefined;
+		if (typeof maybeFgColor === 'string') {
+			fgColor = maybeFgColor;
+		}
 
-	console.log('foo: ', foo);
-
-	// QRCode.(
-	// 	'some text',
-	// 	{
-	// 		errorCorrectionLevel: 'H',
-	// 		color: {
-	// 			// light: '#456',
-	// 			dark: '#ab7003'
-	// 		}
-	// 	},
-	// 	function (err, newUrl) {
-	// 		console.log(newUrl);
-	// 		url = newUrl;
-	// 	}
-	// );
-
-	let inputValue = '';
+		qrCode = new QrCode({ value, ecLevel, size, bgColor, fgColor });
+	}
 </script>
 
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<form
+	on:submit|preventDefault={({ currentTarget }) => {
+		handleSubmit(currentTarget);
+	}}
+>
+	<label>
+		QR Value:
+		<input name="value" type="text" required />
+	</label>
 
-{@html url}
+	<label>
+		Error correction level:
+		<select name="ecLevel" value="M">
+			<option value="L">Low</option>
+			<option value="M">Medium</option>
+			<option value="Q">Quartile</option>
+			<option value="H">High</option>
+		</select>
+	</label>
 
-<!-- on:change={(evnt) => handleChange(evnt.currentTarget.value)} -->
-<input bind:value={inputValue} type="text" />
+	<label>
+		QR Size:
+		<input name="size" type="text" />
+	</label>
 
-<!-- <QRCode value="testing12354" /> -->
-{#key inputValue}
-	<QrCode
-		data={{
-			value: inputValue, // 'Hello World',
-			size: 500,
-			logoImage: 'https://raw.githubusercontent.com/gcoro/react-qrcode-logo/master/res/qrcode-ts.png',
-			removeQrCodeBehindLogo: true,
-			logoPadding: 10,
-			// logoImage: 'https://raw.githubusercontent.com/gcoro/react-qrcode-logo/master/res/',
-			fgColor: '#5C1D05'
-		}}
-	/>
+	<label>
+		Background color:
+		<input name="bgColor" type="text" />
+	</label>
+
+	<label>
+		Foreground color:
+		<input name="fgColor" type="text" />
+	</label>
+
+	<!-- If they have a link I will recommend the logoPadding -->
+
+	<!-- TODO: Add "additional tab" for detailed params -->
+
+	<button>Create QR code!</button>
+</form>
+
+{#key qrCode}
+	{#if typeof qrCode !== 'undefined'}
+		<img alt="generated qr code" src={qrCode.dataUrl} />
+	{/if}
 {/key}
+
+<QrComponent data={{value: 'testing.com', size: 500}} />
