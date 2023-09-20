@@ -43,52 +43,62 @@
 	}
 </script>
 
-<form
-	on:submit|preventDefault={({ currentTarget }) => {
-		handleSubmit(currentTarget);
-	}}
->
-	<label>
-		QR Value:
-		<input name="value" type="text" required />
-	</label>
+<div class="container h-full mx-auto flex flex-col justify-center items-center">
+	<!-- <div class="space-y-10 text-center flex flex-col items-center">
+		<h2 class="h2">Welcome to Skeleton.</h2>
+	</div> -->
 
-	<label>
-		Error correction level:
-		<select name="ecLevel" value="M">
-			<option value="L">Low</option>
-			<option value="M">Medium</option>
-			<option value="Q">Quartile</option>
-			<option value="H">High</option>
-		</select>
-	</label>
+	<form class="py-4"
+		on:submit|preventDefault={({ currentTarget }) => {
+			handleSubmit(currentTarget);
+		}}
+	>
+		<label class="label">
+			<span>QR Value:</span>
+			<input class="input" name="value" type="text" required />
+		</label>
 
-	<label>
-		QR Size:
-		<input name="size" type="text" />
-	</label>
+		<label class="label">
+			Error correction level:
+			<select class="select" name="ecLevel" value="M">
+				<option value="L">Low</option>
+				<option value="M">Medium</option>
+				<option value="Q">Quartile</option>
+				<option value="H">High</option>
+			</select>
+		</label>
 
-	<label>
-		Background color:
-		<input name="bgColor" type="text" />
-	</label>
+		<label class="label">
+			<span>QR Size:</span>
+			<input class="input" name="size" type="text" />
+		</label>
 
-	<label>
-		Foreground color:
-		<input name="fgColor" type="text" />
-	</label>
+		<label class="label">
+			<span>Background color:</span>
+			<input class="input" name="bgColor" type="text" />
+		</label>
 
-	<!-- If they have a link I will recommend the logoPadding -->
+		<label class="label">
+			<span>Foreground color:</span>
+			<input class="input" name="fgColor" type="text" />
+		</label>
 
-	<!-- TODO: Add "additional tab" for detailed params -->
+		<!-- If they have a link I will recommend the logoPadding -->
 
-	<button>Create QR code!</button>
-</form>
+		<!-- TODO: Add "additional tab" for detailed params -->
 
-{#key qrCode}
-	{#if typeof qrCode !== 'undefined'}
-		<img alt="generated qr code" src={qrCode.dataUrl} />
-	{/if}
-{/key}
+		<button class="mt-4 btn variant-ghost">Create QR code!</button>
+	</form>
 
-<QrComponent data={{value: 'testing.com', size: 500}} />
+	<div class="max-w-sm md:max-w-lg">
+		{#key qrCode}
+			{#if typeof qrCode !== 'undefined'}
+				<img alt="generated qr code" src={qrCode.dataUrl} />
+			{/if}
+		{/key}
+
+		<!-- <div>
+			<QrComponent data={{ value: 'testing.com', size: 500 }} />
+		</div> -->
+	</div>
+</div>
