@@ -136,17 +136,21 @@ export class QrCode implements QrCodeProps {
 	constructor(data: QrCodeProps) {
 		const dataDefaulted = {
 			...data,
-			value: data.value ?? defaultProps.value,
-			ecLevel: data.ecLevel ?? defaultProps.ecLevel,
-			enableCORS: data.enableCORS ?? defaultProps.enableCORS,
-			size: data.size ?? defaultProps.size,
-			quietZone: data.quietZone ?? defaultProps.quietZone,
-			bgColor: data.bgColor ?? defaultProps.bgColor,
-			fgColor: data.fgColor ?? defaultProps.fgColor,
-			logoOpacity: data.logoOpacity ?? defaultProps.logoOpacity,
-			qrStyle: data.qrStyle ?? defaultProps.qrStyle,
+			value: data.value && data.value.length > 0 ? data.value : defaultProps.value,
+			ecLevel: data.ecLevel && data.ecLevel.length > 0 ? data.ecLevel : defaultProps.ecLevel,
+			enableCORS: typeof data.enableCORS === 'boolean' ? data.enableCORS : defaultProps.enableCORS,
+			size: data.size && data.size > 0 ? data.size : defaultProps.size,
+			quietZone: data.quietZone && data.quietZone >= 0 ? data.quietZone : defaultProps.quietZone,
+			bgColor: data.bgColor && data.bgColor.length > 0 ? data.bgColor : defaultProps.bgColor,
+			fgColor: data.fgColor && data.fgColor.length > 0 ? data.fgColor : defaultProps.fgColor,
+			logoOpacity:
+				data.logoOpacity && data.logoOpacity > 0 ? data.logoOpacity : defaultProps.logoOpacity,
+			qrStyle: data.qrStyle && data.qrStyle.length > 0 ? data.qrStyle : defaultProps.qrStyle,
 			eyeRadius: data.eyeRadius ?? defaultProps.eyeRadius,
-			logoPaddingStyle: data.logoPaddingStyle ?? defaultProps.logoPaddingStyle
+			logoPaddingStyle:
+				data.logoPaddingStyle && data.logoPaddingStyle.length > 0
+					? data.logoPaddingStyle
+					: defaultProps.logoPaddingStyle
 		}; // satisfies IProps;
 
 		const {
