@@ -16,7 +16,7 @@ export interface QrCodeProps {
 	 * The value encoded in the QR Code.
 	 * When the QR Code is decoded, this value will be returned.
 	 */
-	value?: string;
+	value: string;
 	/**
 	 * The error correction level of the QR Code.
 	 */
@@ -101,26 +101,26 @@ const defaultProps = {
 } as const;
 
 export class QrCode implements QrCodeProps {
-	bgColor?: string;
-	ecLevel?: 'L' | 'M' | 'Q' | 'H';
+	bgColor: string;
+	ecLevel: 'L' | 'M' | 'Q' | 'H';
 	enableCORS?: boolean;
 	eyeColor?: EyeColor | [EyeColor, EyeColor, EyeColor];
 	eyeRadius?: CornerRadii | [CornerRadii, CornerRadii, CornerRadii];
-	fgColor?: string;
+	fgColor: string;
 	id?: string;
-	logoHeight?: number;
+	logoHeight: number;
 	logoImage?: string;
 	logoOnLoad?: () => void;
-	logoOpacity?: number;
-	logoPadding?: number;
+	logoOpacity: number;
+	logoPadding: number;
 	logoPaddingStyle?: 'square' | 'circle';
-	logoWidth?: number;
+	logoWidth: number;
 	qrStyle?: 'squares' | 'dots';
-	quietZone?: number;
+	quietZone: number;
 	removeQrCodeBehindLogo?: boolean;
-	size?: number;
+	size: number;
 	style?: object;
-	value?: string;
+	value: string;
 
 	private internalCanvas: HTMLCanvasElement = document.createElement('canvas');
 	private ctx = this.internalCanvas.getContext('2d');
@@ -134,206 +134,40 @@ export class QrCode implements QrCodeProps {
 	}
 
 	constructor(data: QrCodeProps) {
-		const dataDefaulted = {
-			...data,
-			value: data.value && data.value.length > 0 ? data.value : defaultProps.value,
-			ecLevel: data.ecLevel && data.ecLevel.length > 0 ? data.ecLevel : defaultProps.ecLevel,
-			enableCORS: typeof data.enableCORS === 'boolean' ? data.enableCORS : defaultProps.enableCORS,
-			size: data.size && data.size > 0 ? data.size : defaultProps.size,
-			quietZone: data.quietZone && data.quietZone >= 0 ? data.quietZone : defaultProps.quietZone,
-			bgColor: data.bgColor && data.bgColor.length > 0 ? data.bgColor : defaultProps.bgColor,
-			fgColor: data.fgColor && data.fgColor.length > 0 ? data.fgColor : defaultProps.fgColor,
-			logoOpacity:
-				data.logoOpacity && data.logoOpacity > 0 ? data.logoOpacity : defaultProps.logoOpacity,
-			qrStyle: data.qrStyle && data.qrStyle.length > 0 ? data.qrStyle : defaultProps.qrStyle,
-			eyeRadius: data.eyeRadius ?? defaultProps.eyeRadius,
-			logoPaddingStyle:
-				data.logoPaddingStyle && data.logoPaddingStyle.length > 0
-					? data.logoPaddingStyle
-					: defaultProps.logoPaddingStyle
-		}; // satisfies IProps;
+		this.bgColor = data.bgColor && data.bgColor.length > 0 ? data.bgColor : defaultProps.bgColor;
+		this.ecLevel = data.ecLevel && data.ecLevel.length > 0 ? data.ecLevel : defaultProps.ecLevel;
+		this.enableCORS =
+			typeof data.enableCORS === 'boolean' ? data.enableCORS : defaultProps.enableCORS;
+		this.eyeColor = data.eyeColor;
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore TODO: fix this...
+		this.eyeRadius = data.eyeRadius ?? defaultProps.eyeRadius;
+		this.fgColor = data.fgColor && data.fgColor.length > 0 ? data.fgColor : defaultProps.fgColor;
+		this.id = data.id;
+		this.logoHeight =
+			typeof data.logoHeight !== 'undefined' && data.logoHeight > 0 ? data.logoHeight : 0;
+		this.logoImage = data.logoImage;
+		this.logoOnLoad = data.logoOnLoad;
+		this.logoOpacity =
+			typeof data.logoOpacity !== 'undefined' && data.logoOpacity > 0
+				? data.logoOpacity
+				: defaultProps.logoOpacity;
+		this.logoPadding =
+			typeof data.logoPadding !== 'undefined' && data.logoPadding > 0 ? data.logoPadding : 0;
+		this.logoPaddingStyle =
+			data.logoPaddingStyle && data.logoPaddingStyle.length > 0
+				? data.logoPaddingStyle
+				: defaultProps.logoPaddingStyle;
+		this.logoWidth =
+			typeof data.logoWidth !== 'undefined' && data.logoWidth > 0 ? data.logoWidth : 0;
+		this.qrStyle = data.qrStyle && data.qrStyle.length > 0 ? data.qrStyle : defaultProps.qrStyle;
+		this.quietZone = data.quietZone ?? defaultProps.quietZone;
+		this.removeQrCodeBehindLogo = data.removeQrCodeBehindLogo;
+		this.size = typeof data.size !== 'undefined' && data.size > 0 ? data.size : defaultProps.size;
+		this.style = data.style;
+		this.value = data.value;
 
-		const {
-			bgColor,
-			ecLevel,
-			enableCORS,
-			eyeColor,
-			eyeRadius,
-			fgColor,
-			logoHeight = 0,
-			logoImage,
-			logoOnLoad,
-			logoOpacity,
-			logoPadding = 0,
-			logoPaddingStyle,
-			logoWidth = 0,
-			qrStyle,
-			quietZone,
-			removeQrCodeBehindLogo,
-			// TODO: auto adjust size maybe based on size of string?
-			size,
-			value
-		} = dataDefaulted;
-
-		if (this.ctx === null) throw new Error('Unable to make QR code');
-
-		const qrCode = QrCodeGenerator(0, ecLevel);
-		qrCode.addData(this.utf16to8(value));
-		qrCode.make();
-
-		const canvasSize = size + 2 * quietZone;
-		const length = qrCode.getModuleCount();
-		const cellSize = size / length;
-		const scale = window.devicePixelRatio || 1;
-		this.internalCanvas.height = this.internalCanvas.width = canvasSize * scale;
-		this.ctx.scale(scale, scale);
-
-		this.ctx.fillStyle = bgColor;
-		this.ctx.fillRect(0, 0, canvasSize, canvasSize);
-
-		const offset = quietZone;
-
-		const positioningZones: ICoordinates[] = [
-			{ row: 0, col: 0 },
-			{ row: 0, col: length - 7 },
-			{ row: length - 7, col: 0 }
-		];
-
-		this.ctx.strokeStyle = fgColor;
-		if (qrStyle === 'dots') {
-			this.ctx.fillStyle = fgColor;
-			const radius = cellSize / 2;
-			for (let row = 0; row < length; row++) {
-				for (let col = 0; col < length; col++) {
-					if (qrCode.isDark(row, col) && !this.isInPositioninZone(row, col, positioningZones)) {
-						this.ctx.beginPath();
-						this.ctx.arc(
-							Math.round(col * cellSize) + radius + offset,
-							Math.round(row * cellSize) + radius + offset,
-							(radius / 100) * 75,
-							0,
-							2 * Math.PI,
-							false
-						);
-						this.ctx.closePath();
-						this.ctx.fill();
-					}
-				}
-			}
-		} else {
-			for (let row = 0; row < length; row++) {
-				for (let col = 0; col < length; col++) {
-					if (qrCode.isDark(row, col) && !this.isInPositioninZone(row, col, positioningZones)) {
-						this.ctx.fillStyle = fgColor;
-						const w = Math.ceil((col + 1) * cellSize) - Math.floor(col * cellSize);
-						const h = Math.ceil((row + 1) * cellSize) - Math.floor(row * cellSize);
-						this.ctx.fillRect(
-							Math.round(col * cellSize) + offset,
-							Math.round(row * cellSize) + offset,
-							w,
-							h
-						);
-					}
-				}
-			}
-		}
-
-		// Draw positioning patterns
-		for (let i = 0; i < 3; i++) {
-			const { row, col } = positioningZones[i];
-
-			let radii = eyeRadius;
-			// if not specified, eye color is the same as foreground,
-			let color: EyeColor = fgColor;
-
-			if (Array.isArray(radii)) {
-				radii = radii[i];
-			}
-			if (typeof radii == 'number') {
-				radii = [radii, radii, radii, radii];
-			}
-
-			if (typeof eyeColor !== 'undefined') {
-				if (Array.isArray(eyeColor)) {
-					// if array, we pass the single color
-					color = eyeColor[i];
-				} else {
-					color = eyeColor as EyeColor;
-				}
-			}
-
-			// TODO: No as...
-			this.drawPositioningPattern(cellSize, offset, row, col, color, radii as CornerRadii);
-		}
-
-		if (logoImage) {
-			const image = new Image();
-			if (enableCORS) {
-				image.crossOrigin = 'Anonymous';
-			}
-
-			image.onload = () => {
-				if (this.ctx === null) throw new Error('Unable to make QR code');
-
-				this.ctx.save();
-
-				const dWidthLogo = logoWidth || size * 0.2;
-				const dHeightLogo = logoHeight || dWidthLogo;
-				const dxLogo = (size - dWidthLogo) / 2;
-				const dyLogo = (size - dHeightLogo) / 2;
-
-				if (removeQrCodeBehindLogo || logoPadding) {
-					this.ctx.beginPath();
-
-					this.ctx.strokeStyle = bgColor;
-					this.ctx.fillStyle = bgColor;
-
-					const dWidthLogoPadding = dWidthLogo + 2 * logoPadding;
-					const dHeightLogoPadding = dHeightLogo + 2 * logoPadding;
-					const dxLogoPadding = dxLogo + offset - logoPadding;
-					const dyLogoPadding = dyLogo + offset - logoPadding;
-
-					if (logoPaddingStyle === 'circle') {
-						const dxCenterLogoPadding = dxLogoPadding + dWidthLogoPadding / 2;
-						const dyCenterLogoPadding = dyLogoPadding + dHeightLogoPadding / 2;
-						this.ctx.ellipse(
-							dxCenterLogoPadding,
-							dyCenterLogoPadding,
-							dWidthLogoPadding / 2,
-							dHeightLogoPadding / 2,
-							0,
-							0,
-							2 * Math.PI
-						);
-						this.ctx.stroke();
-						this.ctx.fill();
-					} else {
-						this.ctx.fillRect(dxLogoPadding, dyLogoPadding, dWidthLogoPadding, dHeightLogoPadding);
-					}
-				}
-
-				this.ctx.globalAlpha = logoOpacity;
-				this.ctx.drawImage(image, dxLogo + offset, dyLogo + offset, dWidthLogo, dHeightLogo);
-				// TODO: Why was it "restore" not "save"?
-				// this.ctx.restore();
-				this.ctx.save();
-				if (logoOnLoad) {
-					logoOnLoad();
-				}
-			};
-
-			image.onerror = (err) => {
-				console.error(err);
-				// TODO: Show error invalid image
-			};
-
-			image.src = logoImage;
-		}
-
-		// const dataUrl = this.canvas.toDataURL();
-		// console.log('dataUrl', dataUrl);
-
-		// this.canvas.remove();
+		this.update();
 	}
 
 	private utf16to8(str: string): string {
@@ -469,7 +303,7 @@ export class QrCode implements QrCodeProps {
 	/**
 	 * Is this dot inside a positional pattern zone.
 	 */
-	private isInPositioninZone(col: number, row: number, zones: ICoordinates[]) {
+	private isInPositionInZone(col: number, row: number, zones: ICoordinates[]) {
 		return zones.some(
 			(zone) => row >= zone.row && row <= zone.row + 7 && col >= zone.col && col <= zone.col + 7
 		);
@@ -505,6 +339,184 @@ export class QrCode implements QrCodeProps {
 			); // check cols
 		} else {
 			return false;
+		}
+	}
+
+	private loadImage(url: string) {
+		return new Promise<HTMLImageElement>((resolve, reject) => {
+			const image = new Image();
+			if (this.enableCORS) {
+				image.crossOrigin = 'Anonymous';
+			}
+			image.onload = () => {
+				resolve(image);
+			};
+
+			image.onerror = (err) => reject(err);
+
+			image.src = url;
+
+			//
+		});
+	}
+
+	async addImage(url: string) {
+		this.logoImage = url;
+
+		const image = await this.loadImage(url);
+
+		const logoWidth = this.logoWidth;
+		const logoHeight = this.logoHeight;
+		const logoPadding = this.logoPadding;
+		const offset = this.quietZone;
+
+		if (this.ctx === null) throw new Error('ctx unavailable');
+
+		this.ctx.save();
+
+		const dWidthLogo = logoWidth || this.size * 0.2;
+		const dHeightLogo = logoHeight || dWidthLogo;
+		const dxLogo = (this.size - dWidthLogo) / 2;
+		const dyLogo = (this.size - dHeightLogo) / 2;
+
+		if (this.removeQrCodeBehindLogo || logoPadding) {
+			this.ctx.beginPath();
+
+			this.ctx.strokeStyle = this.bgColor;
+			this.ctx.fillStyle = this.bgColor;
+
+			const dWidthLogoPadding = dWidthLogo + 2 * logoPadding;
+			const dHeightLogoPadding = dHeightLogo + 2 * logoPadding;
+			const dxLogoPadding = dxLogo + offset - logoPadding;
+			const dyLogoPadding = dyLogo + offset - logoPadding;
+
+			if (this.logoPaddingStyle === 'circle') {
+				const dxCenterLogoPadding = dxLogoPadding + dWidthLogoPadding / 2;
+				const dyCenterLogoPadding = dyLogoPadding + dHeightLogoPadding / 2;
+				this.ctx.ellipse(
+					dxCenterLogoPadding,
+					dyCenterLogoPadding,
+					dWidthLogoPadding / 2,
+					dHeightLogoPadding / 2,
+					0,
+					0,
+					2 * Math.PI
+				);
+				this.ctx.stroke();
+				this.ctx.fill();
+			} else {
+				this.ctx.fillRect(dxLogoPadding, dyLogoPadding, dWidthLogoPadding, dHeightLogoPadding);
+			}
+		}
+
+		this.ctx.globalAlpha = this.logoOpacity;
+		this.ctx.drawImage(image, dxLogo + offset, dyLogo + offset, dWidthLogo, dHeightLogo);
+
+		// Keep the original and overlay the newly drawn image.
+		this.ctx.restore();
+
+		if (this.logoOnLoad) {
+			this.logoOnLoad();
+		}
+
+		return this;
+	}
+
+	private update() {
+		// this.internalCanvas = document.createElement('canvas');
+		// this.ctx = this.internalCanvas.getContext('2d');
+		// just make sure that these params are passed as numbers
+
+		const qrCode = QrCodeGenerator(0, this.ecLevel);
+		qrCode.addData(this.utf16to8(this.value));
+		qrCode.make();
+
+		if (this.ctx === null) throw new Error('ctx unavailable');
+
+		const canvasSize = this.size + 2 * this.quietZone;
+		const length = qrCode.getModuleCount();
+		const cellSize = this.size / length;
+		const scale = window.devicePixelRatio || 1;
+		this.canvas.height = this.canvas.width = canvasSize * scale;
+		this.ctx.scale(scale, scale);
+
+		this.ctx.fillStyle = this.bgColor;
+		this.ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+		const offset = this.quietZone;
+
+		const positioningZones: ICoordinates[] = [
+			{ row: 0, col: 0 },
+			{ row: 0, col: length - 7 },
+			{ row: length - 7, col: 0 }
+		];
+
+		this.ctx.strokeStyle = this.fgColor;
+		if (this.qrStyle === 'dots') {
+			this.ctx.fillStyle = this.fgColor;
+			const radius = cellSize / 2;
+			for (let row = 0; row < length; row++) {
+				for (let col = 0; col < length; col++) {
+					if (qrCode.isDark(row, col) && !this.isInPositionInZone(row, col, positioningZones)) {
+						this.ctx.beginPath();
+						this.ctx.arc(
+							Math.round(col * cellSize) + radius + offset,
+							Math.round(row * cellSize) + radius + offset,
+							(radius / 100) * 75,
+							0,
+							2 * Math.PI,
+							false
+						);
+						this.ctx.closePath();
+						this.ctx.fill();
+					}
+				}
+			}
+		} else {
+			for (let row = 0; row < length; row++) {
+				for (let col = 0; col < length; col++) {
+					if (qrCode.isDark(row, col) && !this.isInPositionInZone(row, col, positioningZones)) {
+						this.ctx.fillStyle = this.fgColor;
+						const w = Math.ceil((col + 1) * cellSize) - Math.floor(col * cellSize);
+						const h = Math.ceil((row + 1) * cellSize) - Math.floor(row * cellSize);
+						this.ctx.fillRect(
+							Math.round(col * cellSize) + offset,
+							Math.round(row * cellSize) + offset,
+							w,
+							h
+						);
+					}
+				}
+			}
+		}
+
+		// Draw positioning patterns
+		for (let i = 0; i < 3; i++) {
+			const { row, col } = positioningZones[i];
+
+			let radii = this.eyeRadius;
+			let color;
+
+			if (Array.isArray(radii)) {
+				radii = radii[i];
+			}
+			if (typeof radii == 'number') {
+				radii = [radii, radii, radii, radii];
+			}
+
+			if (!this.eyeColor) {
+				// if not specified, eye color is the same as foreground,
+				color = this.fgColor;
+			} else {
+				if (Array.isArray(this.eyeColor)) {
+					// if array, we pass the single color
+					color = this.eyeColor[i];
+				} else {
+					color = this.eyeColor as EyeColor;
+				}
+			}
+
+			this.drawPositioningPattern(cellSize, offset, row, col, color, radii as CornerRadii);
 		}
 	}
 }

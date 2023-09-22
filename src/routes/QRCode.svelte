@@ -7,13 +7,18 @@
 
 	let qrCode: QrCode;
 
-	onMount(() => {
-		qrCode = new QrCode(data);
+	onMount(async () => {
+		const tmpQrCode = new QrCode(data);
+		if (typeof data.logoImage?.trim() === 'string') {
+			qrCode = await tmpQrCode.addImage(data.logoImage);
+		} else {
+			qrCode = tmpQrCode;
+		}
 	});
 </script>
 
-{#key qrCode?.dataUrl}
-	{#if typeof qrCode?.dataUrl !== 'undefined'}
+{#key qrCode}
+	{#if typeof qrCode !== 'undefined'}
 		<img alt="generated qr code" src={qrCode.dataUrl} />
 	{/if}
 {/key}
