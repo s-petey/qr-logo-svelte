@@ -1,85 +1,21 @@
 <script lang="ts">
-	import { QrCode, type QrCodeProps } from '$lib';
+	import { QrCode } from '$lib';
+	import type { QrCodeProps } from '$lib';
 	import { Accordion, AccordionItem, Tab, TabGroup } from '@skeletonlabs/skeleton';
 	// import QrComponent from './QRCode.svelte';
 
-	// TODO: Move this / make an enum?
-	const ecValues: QrCodeProps['ecLevel'][] = ['H', 'L', 'M', 'Q'];
-	const logoPaddingValues: QrCodeProps['logoPaddingStyle'][] = ['circle', 'square'];
-	const qrStyleValues: QrCodeProps['qrStyle'][] = ['squares', 'dots'];
-
 	let qrCode: QrCode;
-
-	// TODO: START -- MOVE TO CLASS
-	function getFormString(value: FormDataEntryValue | null): string | undefined {
-		if (typeof value === 'string' && value.trim().length > 0) {
-			return value;
-		}
-
-		return undefined;
-	}
-	function getFormBoolean(value: FormDataEntryValue | null): boolean | undefined {
-		if (typeof value === 'string') {
-			return value === 'on';
-		}
-
-		return undefined;
-	}
-
-	function getFormNumber(value: FormDataEntryValue | null): number | undefined {
-		if (typeof value === 'string') {
-			const tmpValue = parseInt(value);
-			if (!isNaN(tmpValue) && tmpValue >= 0) {
-				return tmpValue;
-			}
-		}
-
-		return undefined;
-	}
-
-	function getFormDouble(value: FormDataEntryValue | null): number | undefined {
-		if (typeof value === 'string') {
-			const tmpValue = parseFloat(value);
-			if (!isNaN(tmpValue) && tmpValue >= 0) {
-				return tmpValue;
-			}
-		}
-
-		return undefined;
-	}
-
-	function getEcValue(value: FormDataEntryValue | null | QrCodeProps['ecLevel']) {
-		const found = ecValues.find((val) => val === value);
-
-		return found;
-	}
-
-	function getLogoPaddingValues(
-		value: FormDataEntryValue | null | QrCodeProps['logoPaddingStyle']
-	) {
-		const found = logoPaddingValues.find((val) => val === value);
-
-		return found;
-	}
-
-	function getQrStyleValues(value: FormDataEntryValue | null | QrCodeProps['qrStyle']) {
-		const found = qrStyleValues.find((val) => val === value);
-
-		return found;
-	}
-
-	// TODO: -- END MOVE TO CLASS
 
 	// I'm unable to do server side work, so I will use
 	// the submit as if it were a POST to the server.
 	async function handleSubmit(target: EventTarget & HTMLFormElement) {
 		const formData = new FormData(target);
-		const value = getFormString(formData.get('value'));
+		const value = QrCode.getFormString(formData.get('value'));
 
 		if (typeof value !== 'string') return;
 
 		// Image
-		let imageUrl: QrCodeProps['logoImage'] = getFormString(formData.get('imageUrl'));
+		let imageUrl: QrCodeProps['logoImage'] = QrCode.getFormString(formData.get('imageUrl'));
 		const maybeImageFile = formData.get('imageFile');
 		if (maybeImageFile instanceof File && maybeImageFile.size > 0) {
 			imageUrl = await awaitFileLoadToBase64(maybeImageFile);
@@ -89,25 +25,25 @@
 			// Required
 			value,
 			// Common
-			size: getFormNumber(formData.get('size')),
+			size: QrCode.getFormNumber(formData.get('size')),
 			// FIXME: Add CSS color regex?
-			bgColor: getFormString(formData.get('bgColor')),
-			fgColor: getFormString(formData.get('fgColor')),
+			bgColor: QrCode.getFormString(formData.get('bgColor')),
+			fgColor: QrCode.getFormString(formData.get('fgColor')),
 
 			// Image
 			logoImage: imageUrl,
 			// Image Details
-			removeQrCodeBehindLogo: getFormBoolean(formData.get('removeQrCodeBehindLogo')),
-			logoHeight: getFormNumber(formData.get('logoHeight')),
-			logoOpacity: getFormDouble(formData.get('logoOpacity')),
-			logoPadding: getFormNumber(formData.get('imagePadding')),
-			logoWidth: getFormNumber(formData.get('logoWidth')),
+			removeQrCodeBehindLogo: QrCode.getFormBoolean(formData.get('removeQrCodeBehindLogo')),
+			logoHeight: QrCode.getFormNumber(formData.get('logoHeight')),
+			logoOpacity: QrCode.getFormDouble(formData.get('logoOpacity')),
+			logoPadding: QrCode.getFormNumber(formData.get('imagePadding')),
+			logoWidth: QrCode.getFormNumber(formData.get('logoWidth')),
 
 			// Advanced
-			ecLevel: getEcValue(formData.get('ecLevel')),
-			quietZone: getFormNumber(formData.get('quietZone')),
-			logoPaddingStyle: getLogoPaddingValues(formData.get('logoPaddingStyle')),
-			qrStyle: getQrStyleValues(formData.get('qrStyle')),
+			ecLevel: QrCode.getEcValue(formData.get('ecLevel')),
+			quietZone: QrCode.getFormNumber(formData.get('quietZone')),
+			logoPaddingStyle: QrCode.getLogoPaddingValues(formData.get('logoPaddingStyle')),
+			qrStyle: QrCode.getQrStyleValues(formData.get('qrStyle')),
 
 			// Enable loading images from external sources...
 			enableCORS: true
@@ -258,6 +194,7 @@
 			</svelte:fragment>
 		</TabGroup>
 
+		<!-- TODO: FIX ACCORDION de-registering with form... -->
 		<Accordion autocollapse>
 			<AccordionItem>
 				<svelte:fragment slot="summary">Image Details</svelte:fragment>

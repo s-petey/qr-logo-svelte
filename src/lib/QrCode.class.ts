@@ -1,6 +1,11 @@
 import QrCodeGenerator from 'qrcode-generator';
 import type { CornerRadii, EyeColor, ICoordinates, QrCodeProps } from './QrCode.types';
 
+// TODO: Move this / make an enum?
+const ecValues: QrCodeProps['ecLevel'][] = ['H', 'L', 'M', 'Q'];
+const logoPaddingValues: QrCodeProps['logoPaddingStyle'][] = ['circle', 'square'];
+const qrStyleValues: QrCodeProps['qrStyle'][] = ['squares', 'dots'];
+
 // Constants
 const qrCodeSize = 150;
 
@@ -54,36 +59,30 @@ export class QrCode implements QrCodeProps {
 	}
 
 	constructor(data: QrCodeProps) {
-		this.bgColor = data.bgColor && data.bgColor.length > 0 ? data.bgColor : defaultProps.bgColor;
-		this.ecLevel = data.ecLevel && data.ecLevel.length > 0 ? data.ecLevel : defaultProps.ecLevel;
-		this.enableCORS =
-			typeof data.enableCORS === 'boolean' ? data.enableCORS : defaultProps.enableCORS;
+		// Require defaults.
+		this.bgColor = QrCode.getFormString(data.bgColor) ?? defaultProps.bgColor;
+		this.ecLevel = QrCode.getEcValue(data.ecLevel) ?? defaultProps.ecLevel;
+		this.fgColor = data.fgColor && data.fgColor.length > 0 ? data.fgColor : defaultProps.fgColor;
+		this.logoHeight = QrCode.getFormNumber(data.logoHeight) ?? 0;
+		this.logoOpacity = QrCode.getFormDouble(data.logoOpacity) ?? defaultProps.logoOpacity;
+		this.logoPadding = QrCode.getFormNumber(data.logoPadding) ?? 0;
+		this.logoWidth = QrCode.getFormNumber(data.logoWidth) ?? 0;
+		this.quietZone = QrCode.getFormNumber(data.quietZone) ?? defaultProps.quietZone;
+		this.size = QrCode.getFormNumber(data.size) ?? defaultProps.size;
+		this.value = data.value;
+
+		// Optional values
+		this.enableCORS = QrCode.getFormBoolean(data.enableCORS) ?? defaultProps.enableCORS;
 		this.eyeColor = data.eyeColor;
 		this.eyeRadius = data.eyeRadius ?? defaultProps.eyeRadius;
-		this.fgColor = data.fgColor && data.fgColor.length > 0 ? data.fgColor : defaultProps.fgColor;
 		this.id = data.id;
-		this.logoHeight =
-			typeof data.logoHeight !== 'undefined' && data.logoHeight > 0 ? data.logoHeight : 0;
 		this.logoImage = data.logoImage;
 		this.logoOnLoad = data.logoOnLoad;
-		this.logoOpacity =
-			typeof data.logoOpacity !== 'undefined' && data.logoOpacity > 0
-				? data.logoOpacity
-				: defaultProps.logoOpacity;
-		this.logoPadding =
-			typeof data.logoPadding !== 'undefined' && data.logoPadding > 0 ? data.logoPadding : 0;
 		this.logoPaddingStyle =
-			data.logoPaddingStyle && data.logoPaddingStyle.length > 0
-				? data.logoPaddingStyle
-				: defaultProps.logoPaddingStyle;
-		this.logoWidth =
-			typeof data.logoWidth !== 'undefined' && data.logoWidth > 0 ? data.logoWidth : 0;
-		this.qrStyle = data.qrStyle && data.qrStyle.length > 0 ? data.qrStyle : defaultProps.qrStyle;
-		this.quietZone = data.quietZone ?? defaultProps.quietZone;
+			QrCode.getLogoPaddingValues(data.logoPaddingStyle) ?? defaultProps.logoPaddingStyle;
+		this.qrStyle = QrCode.getQrStyleValues(data.qrStyle) ?? defaultProps.qrStyle;
 		this.removeQrCodeBehindLogo = data.removeQrCodeBehindLogo;
-		this.size = typeof data.size !== 'undefined' && data.size > 0 ? data.size : defaultProps.size;
 		this.style = data.style;
-		this.value = data.value;
 
 		this.update();
 	}
@@ -436,5 +435,75 @@ export class QrCode implements QrCodeProps {
 
 			this.drawPositioningPattern(cellSize, offset, row, col, color, radii as CornerRadii);
 		}
+	}
+
+	static getFormString(value: string | FormDataEntryValue | undefined | null): string | undefined {
+		if (typeof value === 'string' && value.trim().length > 0) {
+			return value;
+		}
+
+		return undefined;
+	}
+
+	static getFormBoolean(
+		value: boolean | FormDataEntryValue | undefined | null
+	): boolean | undefined {
+		if (typeof value === 'string') {
+			return value === 'on';
+		}
+
+		if (typeof value === 'boolean') {
+			return value;
+		}
+
+		return undefined;
+	}
+
+	static getFormNumber(value: number | FormDataEntryValue | undefined | null): number | undefined {
+		if (typeof value === 'string') {
+			const tmpValue = parseInt(value);
+			if (!isNaN(tmpValue) && tmpValue >= 0) {
+				return tmpValue;
+			}
+		} else if (typeof value === 'number') {
+			if (!isNaN(value) && value >= 0) {
+				return value;
+			}
+		}
+
+		return undefined;
+	}
+
+	static getFormDouble(value: number | FormDataEntryValue | undefined | null): number | undefined {
+		if (typeof value === 'string') {
+			const tmpValue = parseFloat(value);
+			if (!isNaN(tmpValue) && tmpValue >= 0) {
+				return tmpValue;
+			}
+		} else if (typeof value === 'number') {
+			if (!isNaN(value) && value >= 0) {
+				return value;
+			}
+		}
+
+		return undefined;
+	}
+
+	static getEcValue(value: FormDataEntryValue | null | QrCodeProps['ecLevel']) {
+		const found = ecValues.find((val) => val === value);
+
+		return found;
+	}
+
+	static getLogoPaddingValues(value: FormDataEntryValue | null | QrCodeProps['logoPaddingStyle']) {
+		const found = logoPaddingValues.find((val) => val === value);
+
+		return found;
+	}
+
+	static getQrStyleValues(value: FormDataEntryValue | null | QrCodeProps['qrStyle']) {
+		const found = qrStyleValues.find((val) => val === value);
+
+		return found;
 	}
 }
