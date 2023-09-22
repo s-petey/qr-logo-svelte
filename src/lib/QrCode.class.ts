@@ -1,93 +1,10 @@
 import QrCodeGenerator from 'qrcode-generator';
-
-type EyeColor = string | InnerOuterEyeColor;
-type InnerOuterEyeColor = {
-	inner: string;
-	outer: string;
-};
-
-type CornerRadii = number | [number, number, number, number] | InnerOuterRadii;
-type InnerOuterRadii = {
-	inner: number | [number, number, number, number];
-	outer: number | [number, number, number, number];
-};
-export interface QrCodeProps {
-	/**
-	 * The value encoded in the QR Code.
-	 * When the QR Code is decoded, this value will be returned.
-	 */
-	value: string;
-	/**
-	 * The error correction level of the QR Code.
-	 */
-	ecLevel?: 'L' | 'M' | 'Q' | 'H';
-	enableCORS?: boolean;
-	/**
-	 * The size of the QR Code.
-	 */
-	size?: number;
-	bgColor?: string;
-	fgColor?: string;
-	/**
-	 * The size of the quiet zone around the QR Code.
-	 * This will have the same color as QR Code bgColor.
-	 */
-	quietZone?: number;
-	/**
-	 * The logo image. It can be a url/path or a base64 value.
-	 */
-	logoImage?: string;
-	logoWidth?: number;
-	logoHeight?: number;
-	logoOpacity?: number;
-	/**
-	 * Callback function to know when the logo in the QR Code is loaded.
-	 */
-	logoOnLoad?: () => void;
-	/**
-	 * Removes points behind the logo. If no logoPadding is
-	 * specified, the removed part will have the same size as the logo.
-	 */
-	removeQrCodeBehindLogo?: boolean;
-	/**
-	 * Adds a border with no points around the logo. When > 0,
-	 * the padding will be visible even if the prop removeQrCodeBehindLogo
-	 * is not set to true.
-	 */
-	logoPadding?: number;
-	/**
-	 * Sets the shape of the padding area around the logo.
-	 */
-	logoPaddingStyle?: 'square' | 'circle';
-	/**
-	 * The corner radius for the positional patterns (the three "eyes"
-	 * around the QR code).
-	 *  https://github.com/gcoro/react-qrcode-logo/blob/master/res/eyeRadius_doc.md
-	 */
-	eyeRadius?: CornerRadii | [CornerRadii, CornerRadii, CornerRadii];
-	/**
-	 * The color for the positional patterns (the three "eyes" around the QR code).
-	 * https://github.com/gcoro/react-qrcode-logo/blob/master/res/eyeColor_doc.md
-	 */
-	eyeColor?: EyeColor | [EyeColor, EyeColor, EyeColor];
-	/**
-	 * Style of the QR Code modules.
-	 */
-	qrStyle?: 'squares' | 'dots';
-	style?: object;
-	id?: string;
-}
-
-interface ICoordinates {
-	row: number;
-	col: number;
-}
+import type { CornerRadii, EyeColor, ICoordinates, QrCodeProps } from './QrCode.types';
 
 // Constants
 const qrCodeSize = 150;
 
 const defaultProps = {
-	value: 'https://kit.svelte.dev/',
 	ecLevel: 'M',
 	enableCORS: false,
 	size: qrCodeSize,
@@ -96,31 +13,34 @@ const defaultProps = {
 	fgColor: '#000000',
 	logoOpacity: 1,
 	qrStyle: 'squares',
-	eyeRadius: [0, 0, 0],
+	eyeRadius: [0, 0, 0, 0] as [number, number, number, number],
 	logoPaddingStyle: 'square'
 } as const;
 
 export class QrCode implements QrCodeProps {
+	// Values that must be set.
 	bgColor: string;
 	ecLevel: 'L' | 'M' | 'Q' | 'H';
-	enableCORS?: boolean;
-	eyeColor?: EyeColor | [EyeColor, EyeColor, EyeColor];
-	eyeRadius?: CornerRadii | [CornerRadii, CornerRadii, CornerRadii];
 	fgColor: string;
-	id?: string;
 	logoHeight: number;
-	logoImage?: string;
-	logoOnLoad?: () => void;
 	logoOpacity: number;
 	logoPadding: number;
-	logoPaddingStyle?: 'square' | 'circle';
 	logoWidth: number;
-	qrStyle?: 'squares' | 'dots';
 	quietZone: number;
-	removeQrCodeBehindLogo?: boolean;
 	size: number;
-	style?: object;
 	value: string;
+
+	// Values that can use the QrCodeProps type.
+	enableCORS;
+	eyeColor;
+	eyeRadius;
+	id;
+	logoImage;
+	logoOnLoad;
+	logoPaddingStyle;
+	qrStyle;
+	removeQrCodeBehindLogo;
+	style;
 
 	private internalCanvas: HTMLCanvasElement = document.createElement('canvas');
 	private ctx = this.internalCanvas.getContext('2d');
@@ -139,8 +59,6 @@ export class QrCode implements QrCodeProps {
 		this.enableCORS =
 			typeof data.enableCORS === 'boolean' ? data.enableCORS : defaultProps.enableCORS;
 		this.eyeColor = data.eyeColor;
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-ignore TODO: fix this...
 		this.eyeRadius = data.eyeRadius ?? defaultProps.eyeRadius;
 		this.fgColor = data.fgColor && data.fgColor.length > 0 ? data.fgColor : defaultProps.fgColor;
 		this.id = data.id;

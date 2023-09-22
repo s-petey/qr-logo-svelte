@@ -37,6 +37,17 @@
 		return undefined;
 	}
 
+	function getFormDouble(value: FormDataEntryValue | null): number | undefined {
+		if (typeof value === 'string') {
+			const tmpValue = parseFloat(value);
+			if (!isNaN(tmpValue) && tmpValue >= 0) {
+				return tmpValue;
+			}
+		}
+
+		return undefined;
+	}
+
 	function getEcValue(value: FormDataEntryValue | null | QrCodeProps['ecLevel']) {
 		const found = ecValues.find((val) => val === value);
 
@@ -88,7 +99,7 @@
 			// Image Details
 			removeQrCodeBehindLogo: getFormBoolean(formData.get('removeQrCodeBehindLogo')),
 			logoHeight: getFormNumber(formData.get('logoHeight')),
-			logoOpacity: getFormNumber(formData.get('logoOpacity')),
+			logoOpacity: getFormDouble(formData.get('logoOpacity')),
 			logoPadding: getFormNumber(formData.get('imagePadding')),
 			logoWidth: getFormNumber(formData.get('logoWidth')),
 
@@ -270,7 +281,7 @@
 
 					<label class="label">
 						<span>Image Opacity:</span>
-						<input class="input" name="logoOpacity" type="number" />
+						<input class="input" name="logoOpacity" type="number" min="0" max="1" step="0.1" />
 					</label>
 
 					<label class="flex items-center space-x-2">
