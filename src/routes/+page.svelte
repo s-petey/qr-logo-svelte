@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { QrCode } from '$lib';
-	import type { QrCodeProps } from '$lib';
+	import { QrCode, EcValues, LogoPaddingStyles, QrStyles } from '$lib';
 	import { Accordion, AccordionItem, Tab, TabGroup } from '@skeletonlabs/skeleton';
 	// import QrComponent from './QRCode.svelte';
 
@@ -15,7 +14,7 @@
 		if (typeof value !== 'string') return;
 
 		// Image
-		let imageUrl: QrCodeProps['logoImage'] = QrCode.getFormString(formData.get('imageUrl'));
+		let imageUrl = QrCode.getFormString(formData.get('imageUrl'));
 		const maybeImageFile = formData.get('imageFile');
 		if (maybeImageFile instanceof File && maybeImageFile.size > 0) {
 			imageUrl = await awaitFileLoadToBase64(maybeImageFile);
@@ -113,7 +112,7 @@
 
 		<label class="label">
 			<span>QR Size:</span>
-			<input class="input" name="size" type="text" />
+			<input class="input" name="size" type="number" step="10" />
 		</label>
 
 		<label class="label">
@@ -233,11 +232,10 @@
 				<svelte:fragment slot="content">
 					<label class="label">
 						Error correction level:
-						<select class="select" name="ecLevel" value="M">
-							<option value="L">Low</option>
-							<option value="M">Medium</option>
-							<option value="Q">Quartile</option>
-							<option value="H">High</option>
+						<select class="select" name="ecLevel" value={EcValues.MEDIUM}>
+							{#each Object.entries(EcValues) as [label, value]}
+								<option {value}><span>{label.toLowerCase()}</span></option>
+							{/each}
 						</select>
 					</label>
 
@@ -248,17 +246,19 @@
 
 					<label class="label">
 						Logo Padding Style:
-						<select class="select" name="logoPaddingStyle" value="square">
-							<option value="square">Square</option>
-							<option value="circle">Circle</option>
+						<select class="select" name="logoPaddingStyle" value={LogoPaddingStyles.SQUARE}>
+							{#each Object.entries(LogoPaddingStyles) as [label, value]}
+								<option {value}>{label.toLowerCase()}</option>
+							{/each}
 						</select>
 					</label>
 
 					<label class="label">
 						QR Style:
-						<select class="select" name="qrStyle" value="squares">
-							<option value="squares">Squares</option>
-							<option value="dots">Dots</option>
+						<select class="select" name="qrStyle" value={QrStyles.SQUARES}>
+							{#each Object.entries(QrStyles) as [label, value]}
+								<option {value}>{label.toLowerCase()}</option>
+							{/each}
 						</select>
 					</label>
 				</svelte:fragment>

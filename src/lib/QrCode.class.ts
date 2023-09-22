@@ -1,36 +1,31 @@
 import QrCodeGenerator from 'qrcode-generator';
 import type { CornerRadii, EyeColor, ICoordinates, QrCodeProps } from './QrCode.types';
-
-// TODO: Move this / make an enum?
-const ecValues: QrCodeProps['ecLevel'][] = ['H', 'L', 'M', 'Q'];
-const logoPaddingValues: QrCodeProps['logoPaddingStyle'][] = ['circle', 'square'];
-const qrStyleValues: QrCodeProps['qrStyle'][] = ['squares', 'dots'];
-
-// Constants
-const qrCodeSize = 150;
+import { LogoPaddingStyles, EcValues, QrStyles, QrCodeSize } from './QrCode.constants';
 
 const defaultProps = {
 	ecLevel: 'M',
 	enableCORS: false,
-	size: qrCodeSize,
+	size: QrCodeSize,
 	quietZone: 10,
 	bgColor: '#FFFFFF',
 	fgColor: '#000000',
 	logoOpacity: 1,
-	qrStyle: 'squares',
+	qrStyle: QrStyles.SQUARES,
 	eyeRadius: [0, 0, 0, 0] as [number, number, number, number],
-	logoPaddingStyle: 'square'
+	logoPaddingStyle: LogoPaddingStyles.SQUARE
 } as const;
 
 export class QrCode implements QrCodeProps {
 	// Values that must be set.
 	bgColor: string;
-	ecLevel: 'L' | 'M' | 'Q' | 'H';
+	ecLevel: (typeof EcValues)[keyof typeof EcValues];
 	fgColor: string;
 	logoHeight: number;
 	logoOpacity: number;
 	logoPadding: number;
+	logoPaddingStyle: (typeof LogoPaddingStyles)[keyof typeof LogoPaddingStyles];
 	logoWidth: number;
+	qrStyle: (typeof QrStyles)[keyof typeof QrStyles];
 	quietZone: number;
 	size: number;
 	value: string;
@@ -42,8 +37,6 @@ export class QrCode implements QrCodeProps {
 	id;
 	logoImage;
 	logoOnLoad;
-	logoPaddingStyle;
-	qrStyle;
 	removeQrCodeBehindLogo;
 	style;
 
@@ -91,7 +84,7 @@ export class QrCode implements QrCodeProps {
 		let out = '';
 		let i: number;
 		let c: number;
-		const len: number = str.length;
+		const len = str.length;
 		for (i = 0; i < len; i++) {
 			c = str.charCodeAt(i);
 			if (c >= 0x0001 && c <= 0x007f) {
@@ -190,7 +183,7 @@ export class QrCode implements QrCodeProps {
 			radiiOuter = radii.outer || 0;
 			radiiInner = radii.inner || 0;
 		} else {
-			radiiOuter = radii; // as CornerRadii;
+			radiiOuter = radii;
 			radiiInner = radiiOuter;
 		}
 
@@ -249,11 +242,13 @@ export class QrCode implements QrCodeProps {
 				this.transformPixelLengthIntoNumberOfCells(dHeightLogo, cellSize) - 1;
 
 			return (
+				// check rows
 				row >= firstRowOfLogo - numberOfCellsMargin &&
-				row <= firstRowOfLogo + logoWidthInCells + numberOfCellsMargin && // check rows
+				row <= firstRowOfLogo + logoWidthInCells + numberOfCellsMargin &&
+				// check cols
 				col >= firstColumnOfLogo - numberOfCellsMargin &&
 				col <= firstColumnOfLogo + logoHeightInCells + numberOfCellsMargin
-			); // check cols
+			);
 		} else {
 			return false;
 		}
@@ -272,8 +267,6 @@ export class QrCode implements QrCodeProps {
 			image.onerror = (err) => reject(err);
 
 			image.src = url;
-
-			//
 		});
 	}
 
@@ -307,7 +300,7 @@ export class QrCode implements QrCodeProps {
 			const dxLogoPadding = dxLogo + offset - logoPadding;
 			const dyLogoPadding = dyLogo + offset - logoPadding;
 
-			if (this.logoPaddingStyle === 'circle') {
+			if (this.logoPaddingStyle === LogoPaddingStyles.CIRCLE) {
 				const dxCenterLogoPadding = dxLogoPadding + dWidthLogoPadding / 2;
 				const dyCenterLogoPadding = dyLogoPadding + dHeightLogoPadding / 2;
 				this.ctx.ellipse(
@@ -340,10 +333,6 @@ export class QrCode implements QrCodeProps {
 	}
 
 	private update() {
-		// this.internalCanvas = document.createElement('canvas');
-		// this.ctx = this.internalCanvas.getContext('2d');
-		// just make sure that these params are passed as numbers
-
 		const qrCode = QrCodeGenerator(0, this.ecLevel);
 		qrCode.addData(this.utf16to8(this.value));
 		qrCode.make();
@@ -369,7 +358,7 @@ export class QrCode implements QrCodeProps {
 		];
 
 		this.ctx.strokeStyle = this.fgColor;
-		if (this.qrStyle === 'dots') {
+		if (this.qrStyle === QrStyles.DOTS) {
 			this.ctx.fillStyle = this.fgColor;
 			const radius = cellSize / 2;
 			for (let row = 0; row < length; row++) {
@@ -490,19 +479,19 @@ export class QrCode implements QrCodeProps {
 	}
 
 	static getEcValue(value: FormDataEntryValue | null | QrCodeProps['ecLevel']) {
-		const found = ecValues.find((val) => val === value);
+		const found = Object.values(EcValues).find((val) => val === value);
 
 		return found;
 	}
 
 	static getLogoPaddingValues(value: FormDataEntryValue | null | QrCodeProps['logoPaddingStyle']) {
-		const found = logoPaddingValues.find((val) => val === value);
+		const found = Object.values(LogoPaddingStyles).find((val) => val === value);
 
 		return found;
 	}
 
 	static getQrStyleValues(value: FormDataEntryValue | null | QrCodeProps['qrStyle']) {
-		const found = qrStyleValues.find((val) => val === value);
+		const found = Object.values(QrStyles).find((val) => val === value);
 
 		return found;
 	}

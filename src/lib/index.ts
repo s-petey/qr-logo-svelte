@@ -2,3 +2,4 @@
 
 export { QrCode } from './QrCode.class';
 export type { QrCodeProps } from './QrCode.types';
+export { EcValues, LogoPaddingStyles, QrStyles } from './QrCode.constants';

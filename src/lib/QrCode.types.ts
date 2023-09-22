@@ -1,3 +1,5 @@
+import type { EcValues, LogoPaddingStyles, QrStyles } from './QrCode.constants';
+
 export type EyeColor = string | InnerOuterEyeColor;
 type InnerOuterEyeColor = {
 	inner: string;
@@ -24,7 +26,7 @@ export type QrCodeProps = {
 	/**
 	 * The error correction level of the QR Code.
 	 */
-	ecLevel?: 'L' | 'M' | 'Q' | 'H';
+	ecLevel?: (typeof EcValues)[keyof typeof EcValues];
 	enableCORS?: boolean;
 	/**
 	 * The size of the QR Code.
@@ -62,7 +64,7 @@ export type QrCodeProps = {
 	/**
 	 * Sets the shape of the padding area around the logo.
 	 */
-	logoPaddingStyle?: 'square' | 'circle';
+	logoPaddingStyle?: (typeof LogoPaddingStyles)[keyof typeof LogoPaddingStyles];
 	/**
 	 * The corner radius for the positional patterns (the three "eyes"
 	 * around the QR code).
@@ -77,7 +79,7 @@ export type QrCodeProps = {
 	/**
 	 * Style of the QR Code modules (items tha make up the qr code).
 	 */
-	qrStyle?: 'squares' | 'dots';
+	qrStyle?: (typeof QrStyles)[keyof typeof QrStyles];
 	style?: object;
 	id?: string;
 };
