@@ -29,6 +29,7 @@ jobs:
             Dockerfile
             captain-definition
             package.json
+            bun.lockb
           outPath: deploy.tar
 
       - name: Deploy App to CapRover
