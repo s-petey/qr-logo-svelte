@@ -26,6 +26,7 @@ jobs:
           cwd: "./"
           files: |
             build/
+            captain-definition
           outPath: deploy.tar
 
       - name: Deploy App to CapRover
