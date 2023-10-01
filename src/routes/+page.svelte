@@ -33,21 +33,27 @@
 		enableCORS: true
 	};
 
+	let imageUrl = '';
+	let files: FileList | null;
+	let tabSet = 0;
+
 	async function handleSubmit(target: EventTarget & HTMLFormElement) {
+		let innerImageUrl = imageUrl;
 		// Image
 		if (
 			formValues.logoImage !== undefined &&
 			formValues.logoImage.length === 0 &&
 			files !== null &&
+			files !== undefined &&
 			files.length > 0
 		) {
-			imageUrl = await awaitFileLoadToBase64(files[0]);
+			innerImageUrl = await awaitFileLoadToBase64(files[0]);
 		}
 
 		const tmpQrCode = new QrCode(formValues);
 
-		if (imageUrl) {
-			qrCode = await tmpQrCode.addImage(imageUrl);
+		if (innerImageUrl) {
+			qrCode = await tmpQrCode.addImage(innerImageUrl);
 		} else {
 			qrCode = tmpQrCode;
 		}
@@ -69,10 +75,6 @@
 		});
 	}
 
-	let imageUrl = '';
-	let files: FileList | null;
-	let tabSet = 0;
-
 	function handleImageUrlRemove() {
 		imageUrl = '';
 	}
@@ -89,7 +91,6 @@
 
 	$: {
 		disableRemove = typeof files === 'undefined' || files === null;
-		console.log(formValues);
 	}
 </script>
 
